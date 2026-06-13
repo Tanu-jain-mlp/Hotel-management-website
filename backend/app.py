@@ -1,12 +1,34 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
-import os 
-app = Flask(__name__)
+import os
 
+app = Flask(__name__)
 CORS(app)
 
-# NEW ROUTE
+# Create database/table if it doesn't exist
+def create_database():
+    conn = sqlite3.connect("hotel.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS bookings(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        city TEXT,
+        rooms INTEGER,
+        adults INTEGER,
+        children INTEGER,
+        checkin TEXT,
+        checkout TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+create_database()
+
+
 @app.route('/')
 def home():
     return "Hotel Management Backend Running Successfully"
@@ -25,7 +47,6 @@ def book_room():
     checkout = data['checkout']
 
     conn = sqlite3.connect("hotel.db")
-
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -54,11 +75,9 @@ def book_room():
 def get_bookings():
 
     conn = sqlite3.connect("hotel.db")
-
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM bookings")
-
     rows = cursor.fetchall()
 
     conn.close()
@@ -79,8 +98,8 @@ def get_bookings():
     return jsonify(bookings)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000))
+        host='0.0.0.0',
+        port=int(os.environ.get('PORT', 5000))
     )
