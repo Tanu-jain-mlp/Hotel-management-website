@@ -6,7 +6,7 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Path to project root (one level above backend)
+# Project root directory
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 # ==========================
@@ -20,12 +20,12 @@ def init_db():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS bookings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL,
-        phone TEXT NOT NULL,
-        room_type TEXT NOT NULL,
-        check_in TEXT NOT NULL,
-        check_out TEXT NOT NULL
+        city TEXT,
+        rooms INTEGER,
+        adults INTEGER,
+        children INTEGER,
+        checkin TEXT,
+        checkout TEXT
     )
     """)
 
@@ -50,7 +50,7 @@ def assets(filename):
     )
 
 @app.route('/<path:filename>')
-def html_pages(filename):
+def pages(filename):
     return send_from_directory(BASE_DIR, filename)
 
 # ==========================
@@ -59,29 +59,30 @@ def html_pages(filename):
 
 @app.route('/book', methods=['POST'])
 def book_room():
-    data = request.json
 
-    name = data.get('name')
-    email = data.get('email')
-    phone = data.get('phone')
-    room_type = data.get('room_type')
-    check_in = data.get('check_in')
-    check_out = data.get('check_out')
+    data = request.get_json()
+
+    city = data.get('city')
+    rooms = data.get('rooms')
+    adults = data.get('adults')
+    children = data.get('children')
+    checkin = data.get('checkin')
+    checkout = data.get('checkout')
 
     conn = sqlite3.connect("hotel.db")
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO bookings
-        (name, email, phone, room_type, check_in, check_out)
-        VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO bookings
+    (city, rooms, adults, children, checkin, checkout)
+    VALUES (?, ?, ?, ?, ?, ?)
     """, (
-        name,
-        email,
-        phone,
-        room_type,
-        check_in,
-        check_out
+        city,
+        rooms,
+        adults,
+        children,
+        checkin,
+        checkout
     ))
 
     conn.commit()
@@ -98,7 +99,7 @@ def get_bookings():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT * FROM bookings
+    SELECT * FROM bookings
     """)
 
     bookings = cursor.fetchall()
